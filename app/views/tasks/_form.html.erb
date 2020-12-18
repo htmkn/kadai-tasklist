@@ -1,0 +1,6 @@
+<%= form_with(model: @task, local: true) do |t| %>
+  <%= t.label :content, 'タスク' %>
+  <%= t.text_field :content %>
+
+  <%= t.submit '作成' %>
+<% end %>
