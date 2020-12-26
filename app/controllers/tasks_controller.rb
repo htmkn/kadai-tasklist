@@ -1,8 +1,11 @@
 class TasksController < ApplicationController
-  before_action :set_message, only: [:show,:edit,:update,:destroy]
+  before_action :correct_user, only: [:show,:edit,:update,:destroy]
+  before_action :require_user_logged_in
   
   def index
-    @tasks = Task.order(id: :desc).page(params[:page]).per(10)
+    if logged_in?
+      @tasks = current_user.tasks.order(id: :desc).page(params[:page]).per(10)
+    end
   end
   
   def show
@@ -13,12 +16,12 @@ class TasksController < ApplicationController
   end
   
   def create
-    @task = Task.new(task_params)
+    @task = current_user.tasks.build(task_params)
     
     if @task.save
       flash[:success] = 'タスクが正常に作成されました'
       redirect_to @task
-    elsif 
+    else
       flash.now[:danger] = 'タスクが作成されませんでした'
       render :new
     end
@@ -42,7 +45,7 @@ class TasksController < ApplicationController
     @task.destroy
     
     flash[:success] = 'タスクが正常に削除されました'
-    redirect_to tasks_url
+    redirect_back(fallback_location: tasks_url)
   end
 
   private
@@ -51,7 +54,10 @@ class TasksController < ApplicationController
     params.require(:task).permit(:content, :status)
   end
   
-  def set_message
-    @task = Task.find(params[:id])
+  def correct_user
+    @task = current_user.tasks.find_by(id: params[:id])
+    unless @task
+      redirect_to root_url
+    end
   end
 end
